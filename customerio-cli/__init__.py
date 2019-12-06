@@ -1,11 +1,33 @@
 import csv
+import json
 
+import requests
 from customerio import CustomerIO
 
 
 class CustomerIOWrapper(object):
+    BASE_URL = 'https://beta-api.customer.io/v1/api'
+
     def __init__(self, site_id, api_key):
+        self.site_id = site_id
+        self.api_key = api_key
         self.cio = CustomerIO(site_id, api_key)
+    
+    def fetch(self, uri, payload):
+        response = requests.get(
+            self.BASE_URL + uri,
+            data=payload,
+            auth=(self.site_id, self.api_key),
+        )
+        return response
+
+    def get_messages(self, message_type=None):
+        payload = {
+            'type': message_type,
+        }
+        response = self.fetch('/messages', payload)
+        data = json.loads(response.content)
+        return data.get('messages')
     
     def remove_bulk(self, filename):
         with open(filename) as f:
@@ -14,11 +36,11 @@ class CustomerIOWrapper(object):
             item_count = len(items)
             
             if not items:
-                print(f'No rows to delete: {filename}')
+                print(f'Error: no rows to in the file: {filename}')
                 return False
 
             if 'id' not in items[0]:
-                print(f'id column not exists in the file {filename}')
+                print(f'Error: id column not exists in the file: {filename}')
                 return False
 
             for idx, item in enumerate(items):
