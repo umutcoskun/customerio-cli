@@ -12,7 +12,7 @@ class CustomerIOWrapper(object):
         self.site_id = site_id
         self.api_key = api_key
         self.cio = CustomerIO(site_id, api_key)
-    
+
     def fetch(self, uri, payload):
         response = requests.get(
             self.BASE_URL + uri,
@@ -28,13 +28,13 @@ class CustomerIOWrapper(object):
         response = self.fetch('/messages', payload)
         data = json.loads(response.content)
         return data.get('messages')
-    
+
     def remove_bulk(self, filename):
         with open(filename) as f:
             reader = csv.DictReader(f, delimiter=',')
             items = list(reader)
             item_count = len(items)
-            
+
             if not items:
                 print(f'Error: no rows to in the file: {filename}')
                 return False
@@ -46,13 +46,13 @@ class CustomerIOWrapper(object):
             for idx, item in enumerate(items):
                 if 'id' not in item:
                     continue
-                
+
                 try:
-                    cio.delete(customer_id=item['id'])
+                    self.cio.delete(customer_id=item['id'])
                     item_label = item['email'] if 'email' in item else item['id']
                     item_percent = round((idx / item_count) * 100, 2)
-                    print(f'{idx_percent}% DELETE ({idx} of {item_count}): {item_label}')
+                    print(f'{item_percent}% DELETE ({idx} of {item_count}): {item_label}')
                 except Exception as e:
                     print(f'Exception: {e}')
-            
+
             return True
